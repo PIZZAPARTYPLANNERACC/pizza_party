@@ -183,6 +183,20 @@
   }
   .setup-banner code{background:#fff;padding:1px 5px;border-radius:4px;}
   footer{text-align:center;font-size:12px;color:#a0917d;margin-top:30px;}
+
+  @media (max-width: 420px){
+    .wrap{padding:20px 12px 60px;}
+    .card{padding:16px 14px;}
+    .grid{gap:4px;}
+    .day{min-height:52px;padding:4px 2px;gap:2px;}
+    .pref{font-size:8px;padding:1px 4px;}
+    .dot{width:6px;height:6px;}
+    .dot-row{gap:1px;}
+    .dot-more{font-size:7px;}
+    .legend{gap:10px;font-size:11px;}
+    .toggle-hint{font-size:11px;}
+    h1{font-size:28px;}
+  }
 </style>
 </head>
 <body>
@@ -371,7 +385,8 @@ function renderCalendar() {
     if (others.length > 0) {
       const dotRow = document.createElement('div');
       dotRow.className = 'dot-row';
-      const shown = others.slice(0, 5);
+      const maxDots = window.innerWidth < 420 ? 3 : 5;
+      const shown = others.slice(0, maxDots);
       shown.forEach(({ name: n, pref: p }) => {
         const wrap = document.createElement('span');
         wrap.className = 'dot-wrap';
@@ -598,6 +613,12 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest('.dot-wrap')) {
     document.querySelectorAll('.dot-wrap.tapped').forEach(w => w.classList.remove('tapped'));
   }
+});
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(renderCalendar, 150);
 });
 
 renderCalendar();
