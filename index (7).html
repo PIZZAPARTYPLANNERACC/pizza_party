@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pizza Night Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;0,900;1,600&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --crust: #f6ead2;
+    --crust-dark: #e8d3a8;
+    --sauce: #c1401e;
+    --sauce-dark: #8f2c14;
+    --basil: #35603f;
+    --basil-light: #6a9b6f;
+    --cheese: #f0b429;
+    --char: #2c1c14;
+    --ink: #3a2a1f;
+    --white: #fffaf0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Karla', sans-serif;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(193,64,30,0.08), transparent 40%),
+      radial-gradient(circle at 90% 85%, rgba(53,96,63,0.08), transparent 45%),
+      var(--crust);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .wrap{max-width:840px;margin:0 auto;padding:32px 20px 80px;}
+
+  header{text-align:center;margin-bottom:8px;}
+  .eyebrow{
+    font-family:'Karla',sans-serif;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-size:12px;
+    font-weight:700;
+    color:var(--sauce-dark);
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:900;
+    font-size:clamp(32px,6vw,52px);
+    margin:6px 0 4px;
+    color:var(--char);
+    letter-spacing:-0.01em;
+  }
+  .sub{color:#6b5847;font-size:15px;max-width:520px;margin:0 auto;line-height:1.5;}
+
+  .pie-divider{
+    display:flex;justify-content:center;align-items:center;margin:22px 0 26px;
+  }
+  .pizza-logo{width:56px;height:56px;filter:drop-shadow(0 3px 4px rgba(44,28,20,0.15));}
+
+  .card{
+    background:var(--white);
+    border:1px solid var(--crust-dark);
+    border-radius:18px;
+    padding:22px 24px;
+    margin-bottom:20px;
+    box-shadow:0 6px 20px rgba(44,28,20,0.06);
+  }
+  label{display:block;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--sauce-dark);margin-bottom:8px;}
+  input[type=text]{
+    width:100%;padding:12px 14px;border:2px solid var(--crust-dark);border-radius:10px;
+    font-family:'Karla',sans-serif;font-size:15px;background:#fffdf9;color:var(--ink);
+  }
+  input[type=text]:focus{outline:none;border-color:var(--sauce);}
+
+  .monthnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .monthnav button{
+    background:var(--crust-dark);border:none;border-radius:8px;width:34px;height:34px;
+    font-size:16px;cursor:pointer;color:var(--ink);
+  }
+  .monthnav h3{font-family:'Fraunces',serif;font-size:20px;margin:0;color:var(--char);}
+
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .dow{text-align:center;font-size:11px;font-weight:700;color:#9a8570;text-transform:uppercase;padding-bottom:4px;}
+  .day{
+    position:relative;border-radius:10px;border:2px solid transparent;
+    background:#fbf5e8;min-height:64px;padding:6px 4px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;
+    transition:.12s;
+  }
+  .day.empty{background:transparent;cursor:default;}
+  .day .num{font-weight:700;font-size:13px;}
+  .day:hover:not(.empty){border-color:var(--basil-light);}
+  .day.selected{background:var(--basil);border-color:var(--basil);}
+  .day.selected .num{color:var(--white);}
+  .pref{
+    font-size:9px;font-weight:700;padding:2px 5px;border-radius:999px;
+    background:var(--cheese);color:var(--char);line-height:1.2;
+  }
+  .day.selected .pref.diy{background:var(--white);color:var(--basil);}
+  .day.selected .pref.resto{background:var(--sauce);color:var(--white);}
+  .day.selected .pref.either{background:var(--cheese);color:var(--char);}
+
+  .save-row{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap;}
+  .btn{
+    font-family:'Karla',sans-serif;font-weight:700;font-size:14px;
+    padding:12px 22px;border-radius:10px;border:none;cursor:pointer;
+    background:var(--sauce);color:var(--white);
+  }
+  .btn:hover{background:var(--sauce-dark);}
+  .status{font-size:13px;color:#6b5847;}
+
+  .toggle-hint{font-size:12px;color:#8a7660;margin-top:8px;}
+
+  h2.section{font-family:'Fraunces',serif;font-size:22px;color:var(--char);margin:0 0 14px;}
+  .summary-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 14px;border-radius:12px;background:#fbf5e8;margin-bottom:8px;
+  }
+  .summary-row.best{background:var(--basil);color:var(--white);}
+  .summary-date{font-weight:700;font-size:14px;}
+  .summary-people{font-size:12px;opacity:.85;}
+  .remove-link{color:var(--sauce);font-weight:700;text-decoration:none;margin-left:2px;}
+  .remove-link:hover{text-decoration:underline;}
+  .summary-row.best .remove-link{color:var(--white);}
+  .summary-tally{display:flex;gap:6px;font-size:11px;font-weight:700;}
+  .tag{padding:3px 8px;border-radius:999px;background:var(--cheese);color:var(--char);}
+  .summary-row.best .tag{background:rgba(255,255,255,0.25);color:var(--white);}
+
+  .setup-banner{
+    background:#fff3e0;border:2px dashed var(--sauce);border-radius:14px;
+    padding:16px 18px;font-size:13px;line-height:1.6;color:var(--char);margin-bottom:20px;
+  }
+  .setup-banner code{background:#fff;padding:1px 5px;border-radius:4px;}
+  footer{text-align:center;font-size:12px;color:#a0917d;margin-top:30px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Pizza Night Planner</h1>
+    <p class="sub">Type in your name -> choose the dates -> votie DIY or a restaurant</p>
+  </header>
+  <div class="pie-divider">
+    <svg class="pizza-logo" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <path d="M32 6 L58 54 A34 34 0 0 1 6 54 Z" fill="var(--cheese)" stroke="var(--crust-dark)" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M32 6 L58 54 A34 34 0 0 1 46 60.5 L32 34 Z" fill="var(--sauce)" opacity="0.14"/>
+      <path d="M10 50 A34 34 0 0 0 54 50 Z" fill="none" stroke="var(--crust-dark)" stroke-width="3"/>
+      <circle cx="30" cy="24" r="4" fill="var(--sauce)"/>
+      <circle cx="40" cy="34" r="4" fill="var(--sauce)"/>
+      <circle cx="24" cy="38" r="3.4" fill="var(--sauce)"/>
+      <circle cx="33" cy="45" r="3" fill="var(--basil)"/>
+      <circle cx="22" cy="47" r="2.4" fill="var(--basil)"/>
+    </svg>
+  </div>
+
+  <div id="setupBanner" class="setup-banner" style="display:none;">
+    <strong>One-time setup needed:</strong> this page needs a free Firebase project so everyone's answers are shared.
+    Open <code>index.html</code>, find the <code>firebaseConfig</code> object near the top of the script, and paste in your
+    project's config values. See the README that came with this file for the walkthrough.
+  </div>
+
+  <div class="card">
+    <label for="nameInput">Your name</label>
+    <input type="text" id="nameInput" >
+  </div>
+
+  <div class="card">
+    <div class="monthnav">
+      <button id="prevMonth">&larr;</button>
+      <h3 id="monthLabel"></h3>
+      <button id="nextMonth">&rarr;</button>
+    </div>
+    <div class="grid" id="calGrid"></div>
+    <div class="toggle-hint">Click once for DIY, again for Restaurant, again for Either, and once more to clear.</div>
+    <div class="save-row">
+      <button class="btn" id="saveBtn">Save my availability</button>
+      <button class="btn" id="clearBtn" style="background:var(--crust-dark);color:var(--ink);">Clear all my answers</button>
+      <span class="status" id="statusMsg"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section">Availability</h2>
+    <div id="summary"></div>
+  </div>
+
+  <footer> data is shared live with anyone who opens this page.</footer>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAlM2YZDl5wzC8jerfZmpD48ntjPlqP7zI",
+  authDomain: "pizzaaa-9c850.firebaseapp.com",
+  projectId: "pizzaaa-9c850",
+  storageBucket: "pizzaaa-9c850.firebasestorage.app",
+  messagingSenderId: "268460993361",
+  appId: "1:268460993361:web:7533328d0a8ae53b1a4170",
+  measurementId: "G-XVG0BQ99JE"
+};
+// --------------------------------------------------------------
+
+const isConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
+let db = null;
+let responses = {}; // { name: { "YYYY-MM-DD": "diy"|"resto" } }
+let loadedName = null; // whose saved answers are currently loaded into the calendar
+
+// ---- state ----
+let current = new Date();
+current.setDate(1);
+let mySelections = {}; // "YYYY-MM-DD" -> "diy"|"resto"
+
+const nameInput = document.getElementById('nameInput');
+nameInput.value = localStorage.getItem('pizzaName') || '';
+nameInput.addEventListener('input', () => localStorage.setItem('pizzaName', nameInput.value.trim()));
+nameInput.addEventListener('blur', () => {
+  const name = nameInput.value.trim();
+  if (name && loadedName !== name && responses[name]) {
+    mySelections = { ...responses[name] };
+    loadedName = name;
+    renderCalendar();
+  }
+});
+
+if (isConfigured) {
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  onSnapshot(collection(db, "pizza-availability"), (snap) => {
+    responses = {};
+    snap.forEach(d => { responses[d.id] = d.data().dates || {}; });
+    const currentName = nameInput.value.trim();
+    if (currentName && loadedName !== currentName && responses[currentName]) {
+      mySelections = { ...responses[currentName] };
+      loadedName = currentName;
+      renderCalendar();
+    }
+    renderSummary();
+  });
+} else {
+  document.getElementById('setupBanner').style.display = 'block';
+}
+
+document.getElementById('prevMonth').addEventListener('click', () => {
+  current.setMonth(current.getMonth() - 1);
+  renderCalendar();
+});
+document.getElementById('nextMonth').addEventListener('click', () => {
+  current.setMonth(current.getMonth() + 1);
+  renderCalendar();
+});
+
+function fmtDate(y, m, d) {
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function renderCalendar() {
+  const y = current.getFullYear(), m = current.getMonth();
+  document.getElementById('monthLabel').textContent =
+    current.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  ['S','M','T','W','T','F','S'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'dow'; el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const firstDow = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+  for (let i = 0; i < firstDow; i++) {
+    const el = document.createElement('div');
+    el.className = 'day empty';
+    grid.appendChild(el);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = fmtDate(y, m, d);
+
+    const cell = document.createElement('div');
+    cell.className = 'day';
+    cell.innerHTML = `<span class="num">${d}</span>`;
+
+    const pref = mySelections[key];
+    if (pref) {
+      cell.classList.add('selected');
+      if (pref === 'both') {
+        const tag = document.createElement('span');
+        tag.className = 'pref either';
+        tag.textContent = 'Either';
+        cell.appendChild(tag);
+      } else {
+        const tag = document.createElement('span');
+        tag.className = 'pref ' + (pref === 'diy' ? 'diy' : 'resto');
+        tag.textContent = pref === 'diy' ? 'DIY' : 'Restaurant';
+        cell.appendChild(tag);
+      }
+    }
+
+    cell.addEventListener('click', () => {
+      if (!mySelections[key]) mySelections[key] = 'diy';
+      else if (mySelections[key] === 'diy') mySelections[key] = 'resto';
+      else if (mySelections[key] === 'resto') mySelections[key] = 'both';
+      else delete mySelections[key];
+      renderCalendar();
+    });
+    grid.appendChild(cell);
+  }
+}
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const name = nameInput.value.trim();
+  const statusEl = document.getElementById('statusMsg');
+  if (!name) { statusEl.textContent = 'Enter your name first.'; return; }
+  if (!isConfigured) { statusEl.textContent = 'Set up Firebase first (see banner above).'; return; }
+  try {
+    await setDoc(doc(db, "pizza-availability", name), { dates: mySelections, updatedAt: Date.now() });
+    loadedName = name;
+    statusEl.textContent = 'Saved!';
+  } catch (e) {
+    statusEl.textContent = 'Could not save — check your Firebase setup.';
+    console.error(e);
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', async () => {
+  const name = nameInput.value.trim();
+  const statusEl = document.getElementById('statusMsg');
+  if (!name) { statusEl.textContent = 'Enter your name first.'; return; }
+  mySelections = {};
+  renderCalendar();
+  if (!isConfigured) { statusEl.textContent = 'Cleared locally (set up Firebase to sync).'; return; }
+  try {
+    await setDoc(doc(db, "pizza-availability", name), { dates: {}, updatedAt: Date.now() });
+    loadedName = name;
+    statusEl.textContent = 'All your answers cleared (make sure ur name is typed in).';
+  } catch (e) {
+    statusEl.textContent = 'Cleared locally, but could not sync — check Firebase setup.';
+    console.error(e);
+  }
+});
+
+function renderSummary() {
+  const el = document.getElementById('summary');
+  const tally = {}; // date -> { diy: n, resto: n, people: [] }
+  Object.entries(responses).forEach(([name, dates]) => {
+    Object.entries(dates || {}).forEach(([date, pref]) => {
+      if (!tally[date]) tally[date] = { diy: 0, resto: 0, either: 0, people: [] };
+      if (pref === 'both') tally[date].either++;
+      else tally[date][pref === 'diy' ? 'diy' : 'resto']++;
+      tally[date].people.push(name);
+    });
+  });
+  const totalPeople = Object.keys(responses).length;
+  const sorted = Object.entries(tally).sort((a, b) => b[1].people.length - a[1].people.length || a[0].localeCompare(b[0]));
+  const myName = nameInput.value.trim();
+
+  if (sorted.length === 0) {
+    el.innerHTML = '<p class="status">No one has submitted availability yet.</p>';
+    return;
+  }
+
+  el.innerHTML = '';
+  sorted.forEach(([date, info]) => {
+    const isBest = totalPeople > 0 && info.people.length === totalPeople;
+    const row = document.createElement('div');
+    row.className = 'summary-row' + (isBest ? ' best' : '');
+    const d = new Date(date + 'T00:00:00');
+    const label = d.toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric' });
+
+    const peopleHtml = info.people.map(p => {
+      if (p === myName && myName) {
+        return `<span>${p} <a href="#" class="remove-link" data-date="${date}" data-name="${p}">(remove)</a></span>`;
+      }
+      return `<span>${p}</span>`;
+    }).join(', ');
+
+    row.innerHTML = `
+      <div>
+        <div class="summary-date">${label}${isBest ? ' 🎉 everyone!' : ''}</div>
+        <div class="summary-people">${peopleHtml}</div>
+      </div>
+      <div class="summary-tally">
+        ${info.diy ? `<span class="tag">DIY ${info.diy}</span>` : ''}
+        ${info.resto ? `<span class="tag">Restaurant ${info.resto}</span>` : ''}
+        ${info.either ? `<span class="tag">Either ${info.either}</span>` : ''}
+      </div>`;
+    el.appendChild(row);
+  });
+
+  el.querySelectorAll('.remove-link').forEach(link => {
+    link.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await removeSingleDate(link.dataset.name, link.dataset.date);
+    });
+  });
+}
+
+async function removeSingleDate(name, date) {
+  if (!isConfigured || !db) return;
+  const statusEl = document.getElementById('statusMsg');
+  const updated = { ...(responses[name] || {}) };
+  delete updated[date];
+  try {
+    await setDoc(doc(db, "pizza-availability", name), { dates: updated, updatedAt: Date.now() });
+    if (loadedName === name) {
+      delete mySelections[date];
+      renderCalendar();
+    }
+    statusEl.textContent = `Removed ${date} for ${name}.`;
+  } catch (e) {
+    statusEl.textContent = 'Could not remove — check your Firebase setup.';
+    console.error(e);
+  }
+}
+
+renderCalendar();
+renderSummary();
+</script>
+</body>
+</html>
