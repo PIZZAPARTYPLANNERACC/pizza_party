@@ -18,6 +18,9 @@
     --char: #2c1c14;
     --ink: #3a2a1f;
     --white: #fffaf0;
+    --diy-color: #d64545;
+    --resto-color: #2d6ca8;
+    --either-color: #2fae59;
   }
   *{box-sizing:border-box;}
   body{
@@ -95,9 +98,42 @@
     font-size:9px;font-weight:700;padding:2px 5px;border-radius:999px;
     background:var(--cheese);color:var(--char);line-height:1.2;
   }
-  .day.selected .pref.diy{background:var(--white);color:var(--basil);}
-  .day.selected .pref.resto{background:var(--sauce);color:var(--white);}
-  .day.selected .pref.either{background:var(--cheese);color:var(--char);}
+  .day.selected .pref.diy{background:var(--diy-color);color:var(--white);}
+  .day.selected .pref.resto{background:var(--resto-color);color:var(--white);}
+  .day.selected .pref.either{background:var(--either-color);color:var(--white);}
+  .dot-row{display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;margin-top:1px;max-width:100%;}
+  .dot-wrap{position:relative;display:inline-flex;padding:3px;margin:-3px;}
+  .dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+  .dot-wrap:hover::after{
+    content:attr(data-name);
+    position:absolute;
+    bottom:130%;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--char);
+    color:var(--white);
+    padding:4px 8px;
+    border-radius:7px;
+    font-size:10px;
+    font-weight:600;
+    white-space:nowrap;
+    box-shadow:0 4px 10px rgba(44,28,20,0.25);
+    z-index:20;
+    pointer-events:none;
+  }
+  .dot-wrap:hover::before{
+    content:'';
+    position:absolute;
+    bottom:112%;
+    left:50%;
+    transform:translateX(-50%);
+    border:4px solid transparent;
+    border-top-color:var(--char);
+    z-index:20;
+    pointer-events:none;
+  }
+  .dot-more{font-size:8px;font-weight:700;color:#8a7660;line-height:1;}
+  .day.selected .dot-more{color:rgba(255,255,255,0.8);}
 
   .save-row{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap;}
   .btn{
@@ -109,6 +145,8 @@
   .status{font-size:13px;color:#6b5847;}
 
   .toggle-hint{font-size:12px;color:#8a7660;margin-top:8px;}
+  .legend{display:flex;gap:14px;margin-top:8px;font-size:12px;font-weight:600;color:var(--ink);flex-wrap:wrap;}
+  .legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}
 
   h2.section{font-family:'Fraunces',serif;font-size:22px;color:var(--char);margin:0 0 14px;}
   .summary-row{
@@ -123,6 +161,9 @@
   .summary-row.best .remove-link{color:var(--white);}
   .summary-tally{display:flex;gap:6px;font-size:11px;font-weight:700;}
   .tag{padding:3px 8px;border-radius:999px;background:var(--cheese);color:var(--char);}
+  .tag.diy{background:var(--diy-color);color:var(--white);}
+  .tag.resto{background:var(--resto-color);color:var(--white);}
+  .tag.either{background:var(--either-color);color:var(--white);}
   .summary-row.best .tag{background:rgba(255,255,255,0.25);color:var(--white);}
 
   .setup-banner{
@@ -170,7 +211,12 @@
       <button id="nextMonth">&rarr;</button>
     </div>
     <div class="grid" id="calGrid"></div>
-    <div class="toggle-hint">Click once for DIY, again for Restaurant, again for Either, and once more to clear.</div>
+    <div class="toggle-hint">Click once for DIY, again for Restaurant, again for Either, and once more to clear. Dots under a day show who else picked it, colored by their choice — hover a dot to see who.</div>
+    <div class="legend">
+      <span><span class="legend-dot" style="background:var(--diy-color);"></span>DIY</span>
+      <span><span class="legend-dot" style="background:var(--resto-color);"></span>Restaurant</span>
+      <span><span class="legend-dot" style="background:var(--either-color);"></span>Either</span>
+    </div>
     <div class="save-row">
       <button class="btn" id="saveBtn">Save my availability</button>
       <button class="btn" id="clearBtn" style="background:var(--crust-dark);color:var(--ink);">Clear all my answers</button>
@@ -233,8 +279,8 @@ if (isConfigured) {
     if (currentName && loadedName !== currentName && responses[currentName]) {
       mySelections = { ...responses[currentName] };
       loadedName = currentName;
-      renderCalendar();
     }
+    renderCalendar();
     renderSummary();
   });
 } else {
@@ -254,6 +300,12 @@ function fmtDate(y, m, d) {
   return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
 
+function colorForPref(pref) {
+  if (pref === 'diy') return 'var(--diy-color)';
+  if (pref === 'resto') return 'var(--resto-color)';
+  return 'var(--either-color)'; // 'both'
+}
+
 function renderCalendar() {
   const y = current.getFullYear(), m = current.getMonth();
   document.getElementById('monthLabel').textContent =
@@ -269,6 +321,7 @@ function renderCalendar() {
 
   const firstDow = new Date(y, m, 1).getDay();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const myName = nameInput.value.trim();
 
   for (let i = 0; i < firstDow; i++) {
     const el = document.createElement('div');
@@ -297,6 +350,33 @@ function renderCalendar() {
         tag.textContent = pref === 'diy' ? 'DIY' : 'Restaurant';
         cell.appendChild(tag);
       }
+    }
+
+    // tiny dots for everyone else who's marked this date — colored by their preference
+    const others = Object.entries(responses)
+      .filter(([n, dates]) => n !== myName && dates && dates[key])
+      .map(([n, dates]) => ({ name: n, pref: dates[key] }));
+    if (others.length > 0) {
+      const dotRow = document.createElement('div');
+      dotRow.className = 'dot-row';
+      const shown = others.slice(0, 5);
+      shown.forEach(({ name: n, pref: p }) => {
+        const wrap = document.createElement('span');
+        wrap.className = 'dot-wrap';
+        wrap.dataset.name = p === 'both' ? `${n} (Either)` : `${n} (${p === 'diy' ? 'DIY' : 'Restaurant'})`;
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.style.background = colorForPref(p);
+        wrap.appendChild(dot);
+        dotRow.appendChild(wrap);
+      });
+      if (others.length > shown.length) {
+        const more = document.createElement('span');
+        more.className = 'dot-more';
+        more.textContent = `+${others.length - shown.length}`;
+        dotRow.appendChild(more);
+      }
+      cell.appendChild(dotRow);
     }
 
     cell.addEventListener('click', () => {
@@ -342,39 +422,78 @@ document.getElementById('clearBtn').addEventListener('click', async () => {
   }
 });
 
+function isNextDay(d1, d2) {
+  const a = new Date(d1 + 'T00:00:00');
+  const b = new Date(d2 + 'T00:00:00');
+  return (b - a) === 86400000;
+}
+
+function compositionKey(entries) {
+  return entries.map(e => `${e.name}:${e.pref}`).sort().join('|');
+}
+
 function renderSummary() {
   const el = document.getElementById('summary');
-  const tally = {}; // date -> { diy: n, resto: n, people: [] }
+
+  // date -> [{name, pref}]
+  const dateInfo = {};
   Object.entries(responses).forEach(([name, dates]) => {
     Object.entries(dates || {}).forEach(([date, pref]) => {
-      if (!tally[date]) tally[date] = { diy: 0, resto: 0, either: 0, people: [] };
-      if (pref === 'both') tally[date].either++;
-      else tally[date][pref === 'diy' ? 'diy' : 'resto']++;
-      tally[date].people.push(name);
+      if (!dateInfo[date]) dateInfo[date] = [];
+      dateInfo[date].push({ name, pref });
     });
   });
+
   const totalPeople = Object.keys(responses).length;
-  const sorted = Object.entries(tally).sort((a, b) => b[1].people.length - a[1].people.length || a[0].localeCompare(b[0]));
+  const sortedDates = Object.keys(dateInfo).sort();
   const myName = nameInput.value.trim();
 
-  if (sorted.length === 0) {
+  if (sortedDates.length === 0) {
     el.innerHTML = '<p class="status">No one has submitted availability yet.</p>';
     return;
   }
 
+  // collapse consecutive days that have the exact same people + preferences into one range
+  const groups = [];
+  let i = 0;
+  while (i < sortedDates.length) {
+    const key = compositionKey(dateInfo[sortedDates[i]]);
+    let j = i;
+    while (
+      j + 1 < sortedDates.length &&
+      isNextDay(sortedDates[j], sortedDates[j + 1]) &&
+      compositionKey(dateInfo[sortedDates[j + 1]]) === key
+    ) {
+      j++;
+    }
+    groups.push({ startDate: sortedDates[i], endDate: sortedDates[j], entries: dateInfo[sortedDates[i]] });
+    i = j + 1;
+  }
+
+  groups.sort((a, b) => b.entries.length - a.entries.length || a.startDate.localeCompare(b.startDate));
+
   el.innerHTML = '';
-  sorted.forEach(([date, info]) => {
-    const isBest = totalPeople > 0 && info.people.length === totalPeople;
+  groups.forEach(group => {
+    const { startDate, endDate, entries } = group;
+    const diy = entries.filter(e => e.pref === 'diy').length;
+    const resto = entries.filter(e => e.pref === 'resto').length;
+    const either = entries.filter(e => e.pref === 'both').length;
+    const isBest = totalPeople > 0 && entries.length === totalPeople;
+
     const row = document.createElement('div');
     row.className = 'summary-row' + (isBest ? ' best' : '');
-    const d = new Date(date + 'T00:00:00');
-    const label = d.toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric' });
 
-    const peopleHtml = info.people.map(p => {
-      if (p === myName && myName) {
-        return `<span>${p} <a href="#" class="remove-link" data-date="${date}" data-name="${p}">(remove)</a></span>`;
+    const fmt = (ds) => {
+      const d = new Date(ds + 'T00:00:00');
+      return d.toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric' });
+    };
+    const label = startDate === endDate ? fmt(startDate) : `${fmt(startDate)} – ${fmt(endDate)}`;
+
+    const peopleHtml = entries.map(e => {
+      if (e.name === myName && myName) {
+        return `<span>${e.name} <a href="#" class="remove-link" data-start="${startDate}" data-end="${endDate}" data-name="${e.name}">(remove)</a></span>`;
       }
-      return `<span>${p}</span>`;
+      return `<span>${e.name}</span>`;
     }).join(', ');
 
     row.innerHTML = `
@@ -383,9 +502,9 @@ function renderSummary() {
         <div class="summary-people">${peopleHtml}</div>
       </div>
       <div class="summary-tally">
-        ${info.diy ? `<span class="tag">DIY ${info.diy}</span>` : ''}
-        ${info.resto ? `<span class="tag">Restaurant ${info.resto}</span>` : ''}
-        ${info.either ? `<span class="tag">Either ${info.either}</span>` : ''}
+        ${diy ? `<span class="tag diy">DIY</span>` : ''}
+        ${resto ? `<span class="tag resto">Restaurant</span>` : ''}
+        ${either ? `<span class="tag either">Either</span>` : ''}
       </div>`;
     el.appendChild(row);
   });
@@ -393,23 +512,29 @@ function renderSummary() {
   el.querySelectorAll('.remove-link').forEach(link => {
     link.addEventListener('click', async (e) => {
       e.preventDefault();
-      await removeSingleDate(link.dataset.name, link.dataset.date);
+      await removeDateRange(link.dataset.name, link.dataset.start, link.dataset.end);
     });
   });
 }
 
-async function removeSingleDate(name, date) {
+async function removeDateRange(name, startDate, endDate) {
   if (!isConfigured || !db) return;
   const statusEl = document.getElementById('statusMsg');
   const updated = { ...(responses[name] || {}) };
-  delete updated[date];
+  let d = new Date(startDate + 'T00:00:00');
+  const end = new Date(endDate + 'T00:00:00');
+  while (d <= end) {
+    const key = fmtDate(d.getFullYear(), d.getMonth(), d.getDate());
+    delete updated[key];
+    if (loadedName === name) delete mySelections[key];
+    d.setDate(d.getDate() + 1);
+  }
   try {
     await setDoc(doc(db, "pizza-availability", name), { dates: updated, updatedAt: Date.now() });
-    if (loadedName === name) {
-      delete mySelections[date];
-      renderCalendar();
-    }
-    statusEl.textContent = `Removed ${date} for ${name}.`;
+    if (loadedName === name) renderCalendar();
+    statusEl.textContent = startDate === endDate
+      ? `Removed ${startDate} for ${name}.`
+      : `Removed ${startDate} – ${endDate} for ${name}.`;
   } catch (e) {
     statusEl.textContent = 'Could not remove — check your Firebase setup.';
     console.error(e);
