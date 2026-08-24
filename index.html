@@ -102,9 +102,12 @@
   .day.selected .pref.resto{background:var(--resto-color);color:var(--white);}
   .day.selected .pref.either{background:var(--either-color);color:var(--white);}
   .dot-row{display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;margin-top:1px;max-width:100%;}
-  .dot-wrap{position:relative;display:inline-flex;padding:3px;margin:-3px;}
+  .dot-wrap{
+    position:relative;display:inline-flex;padding:3px;margin:-3px;
+    -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
+  }
   .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-  .dot-wrap:hover::after{
+  .dot-wrap:hover::after, .dot-wrap.tapped::after{
     content:attr(data-name);
     position:absolute;
     bottom:130%;
@@ -121,7 +124,7 @@
     z-index:20;
     pointer-events:none;
   }
-  .dot-wrap:hover::before{
+  .dot-wrap:hover::before, .dot-wrap.tapped::before{
     content:'';
     position:absolute;
     bottom:112%;
@@ -145,6 +148,7 @@
   .status{font-size:13px;color:#6b5847;}
 
   .toggle-hint{font-size:12px;color:#8a7660;margin-top:8px;}
+  .toggle-hint + .toggle-hint{margin-top:2px;}
   .legend{display:flex;gap:14px;margin-top:8px;font-size:12px;font-weight:600;color:var(--ink);flex-wrap:wrap;}
   .legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}
 
@@ -211,7 +215,8 @@
       <button id="nextMonth">&rarr;</button>
     </div>
     <div class="grid" id="calGrid"></div>
-    <div class="toggle-hint">Click once for DIY, again for Restaurant, again for Either, and once more to clear. Hover over dot to see people </div>
+    <div class="toggle-hint">Click once for DIY, again for Restaurant, again for Either, and once more to clear.</div>
+    <div class="toggle-hint">Dots show who it is. Hover or click on the dot to see who made the choice.</div>
     <div class="legend">
       <span><span class="legend-dot" style="background:var(--diy-color);"></span>DIY</span>
       <span><span class="legend-dot" style="background:var(--resto-color);"></span>Restaurant</span>
@@ -364,6 +369,13 @@ function renderCalendar() {
         const wrap = document.createElement('span');
         wrap.className = 'dot-wrap';
         wrap.dataset.name = p === 'both' ? `${n} (Either)` : `${n} (${p === 'diy' ? 'DIY' : 'Restaurant'})`;
+        wrap.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const wasTapped = wrap.classList.contains('tapped');
+          document.querySelectorAll('.dot-wrap.tapped').forEach(w => w.classList.remove('tapped'));
+          if (!wasTapped) wrap.classList.add('tapped');
+        });
         const dot = document.createElement('span');
         dot.className = 'dot';
         dot.style.background = colorForPref(p);
@@ -540,6 +552,12 @@ async function removeDateRange(name, startDate, endDate) {
     console.error(e);
   }
 }
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.dot-wrap')) {
+    document.querySelectorAll('.dot-wrap.tapped').forEach(w => w.classList.remove('tapped'));
+  }
+});
 
 renderCalendar();
 renderSummary();
