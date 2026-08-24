@@ -559,8 +559,6 @@ document.getElementById('clearBtn').addEventListener('click', async () => {
   }
 });
 
-const BEST_DATE_THRESHOLD = 0.75; // dates need at least this fraction of people-who've-answered available to be ranked
-
 function computeBestDates() {
   const totalPeopleList = getActivePeople();
   const totalPeople = totalPeopleList.length;
@@ -574,15 +572,12 @@ function computeBestDates() {
     });
   });
 
-  const minAvail = Math.ceil(totalPeople * BEST_DATE_THRESHOLD);
-  const rows = Object.entries(dateMap)
-    .map(([date, availSet]) => ({
-      date,
-      available: availSet.size,
-      missing: totalPeopleList.filter(n => !availSet.has(n)),
-      score: availSet.size / totalPeople
-    }))
-    .filter(r => r.available >= minAvail);
+  const rows = Object.entries(dateMap).map(([date, availSet]) => ({
+    date,
+    available: availSet.size,
+    missing: totalPeopleList.filter(n => !availSet.has(n)),
+    score: availSet.size / totalPeople
+  }));
 
   rows.sort((a, b) => b.score - a.score || b.available - a.available || a.date.localeCompare(b.date));
   return rows.slice(0, 10);
@@ -594,10 +589,7 @@ function renderBestDates() {
   const totalPeople = getActivePeople().length;
 
   if (rows.length === 0) {
-    const minAvail = Math.ceil(totalPeople * BEST_DATE_THRESHOLD);
-    el.innerHTML = totalPeople > 0
-      ? `<p class="status">Not enough overlap yet — need at least ${minAvail} of the ${totalPeople} people who've answered so far free on the same date (${Math.round(BEST_DATE_THRESHOLD * 100)}%).</p>`
-      : '<p class="status">No one has submitted availability yet.</p>';
+    el.innerHTML = '<p class="status">No one has submitted availability yet.</p>';
     return;
   }
 
