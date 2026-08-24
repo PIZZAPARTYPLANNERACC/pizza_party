@@ -153,6 +153,13 @@
   .legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}
 
   h2.section{font-family:'Fraunces',serif;font-size:22px;color:var(--char);margin:0 0 14px;}
+  .month-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .month-chip{
+    padding:6px 14px;border-radius:999px;border:2px solid var(--crust-dark);
+    background:transparent;font-family:'Karla',sans-serif;font-weight:600;font-size:13px;
+    cursor:pointer;color:var(--ink);transition:.15s;
+  }
+  .month-chip.active{background:var(--basil);border-color:var(--basil);color:var(--white);}
   .summary-row{
     display:flex;align-items:center;justify-content:space-between;
     padding:12px 14px;border-radius:12px;background:#fbf5e8;margin-bottom:8px;
@@ -231,6 +238,7 @@
 
   <div class="card">
     <h2 class="section">Availability</h2>
+    <div class="month-tabs" id="monthTabs"></div>
     <div id="summary"></div>
   </div>
 
@@ -261,6 +269,7 @@ let loadedName = null; // whose saved answers are currently loaded into the cale
 let current = new Date();
 current.setDate(1);
 let mySelections = {}; // "YYYY-MM-DD" -> "diy"|"resto"
+let summaryMonthFilter = 'all'; // 'all' or 'YYYY-MM'
 
 const nameInput = document.getElementById('nameInput');
 nameInput.value = localStorage.getItem('pizzaName') || '';
@@ -342,18 +351,16 @@ function renderCalendar() {
     cell.innerHTML = `<span class="num">${d}</span>`;
 
     const pref = mySelections[key];
+    let tag = null;
     if (pref) {
       cell.classList.add('selected');
+      tag = document.createElement('span');
       if (pref === 'both') {
-        const tag = document.createElement('span');
         tag.className = 'pref either';
         tag.textContent = 'Either';
-        cell.appendChild(tag);
       } else {
-        const tag = document.createElement('span');
         tag.className = 'pref ' + (pref === 'diy' ? 'diy' : 'resto');
         tag.textContent = pref === 'diy' ? 'DIY' : 'Restaurant';
-        cell.appendChild(tag);
       }
     }
 
@@ -390,6 +397,8 @@ function renderCalendar() {
       }
       cell.appendChild(dotRow);
     }
+
+    if (tag) cell.appendChild(tag);
 
     cell.addEventListener('click', () => {
       if (!mySelections[key]) mySelections[key] = 'diy';
@@ -446,6 +455,7 @@ function compositionKey(entries) {
 
 function renderSummary() {
   const el = document.getElementById('summary');
+  const tabsEl = document.getElementById('monthTabs');
 
   // date -> [{name, pref}]
   const dateInfo = {};
@@ -461,6 +471,7 @@ function renderSummary() {
   const myName = nameInput.value.trim();
 
   if (sortedDates.length === 0) {
+    tabsEl.innerHTML = '';
     el.innerHTML = '<p class="status">No one has submitted availability yet.</p>';
     return;
   }
@@ -482,10 +493,40 @@ function renderSummary() {
     i = j + 1;
   }
 
-  groups.sort((a, b) => b.entries.length - a.entries.length || a.startDate.localeCompare(b.startDate));
+  // build month tabs from whichever months actually have entries
+  const monthsPresent = [...new Set(groups.map(g => g.startDate.slice(0, 7)))].sort();
+  if (!monthsPresent.includes(summaryMonthFilter)) summaryMonthFilter = 'all';
+
+  const monthLabel = (ym) => {
+    const [yy, mm] = ym.split('-').map(Number);
+    return new Date(yy, mm - 1, 1).toLocaleDateString('default', { month: 'long' });
+  };
+
+  tabsEl.innerHTML = '';
+  const allChip = document.createElement('button');
+  allChip.className = 'month-chip' + (summaryMonthFilter === 'all' ? ' active' : '');
+  allChip.textContent = 'All';
+  allChip.addEventListener('click', () => { summaryMonthFilter = 'all'; renderSummary(); });
+  tabsEl.appendChild(allChip);
+  monthsPresent.forEach(ym => {
+    const chip = document.createElement('button');
+    chip.className = 'month-chip' + (summaryMonthFilter === ym ? ' active' : '');
+    chip.textContent = monthLabel(ym);
+    chip.addEventListener('click', () => { summaryMonthFilter = ym; renderSummary(); });
+    tabsEl.appendChild(chip);
+  });
+
+  const visibleGroups = summaryMonthFilter === 'all'
+    ? groups
+    : groups.filter(g => g.startDate.slice(0, 7) === summaryMonthFilter);
+
+  visibleGroups.sort((a, b) => b.entries.length - a.entries.length || a.startDate.localeCompare(b.startDate));
 
   el.innerHTML = '';
-  groups.forEach(group => {
+  if (visibleGroups.length === 0) {
+    el.innerHTML = '<p class="status">No availability in this month.</p>';
+  }
+  visibleGroups.forEach(group => {
     const { startDate, endDate, entries } = group;
     const diy = entries.filter(e => e.pref === 'diy').length;
     const resto = entries.filter(e => e.pref === 'resto').length;
