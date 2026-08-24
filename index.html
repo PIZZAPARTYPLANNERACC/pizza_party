@@ -101,12 +101,13 @@
   .day.selected .pref.diy{background:var(--diy-color);color:var(--white);}
   .day.selected .pref.resto{background:var(--resto-color);color:var(--white);}
   .day.selected .pref.either{background:var(--either-color);color:var(--white);}
-  .dot-row{display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;margin-top:1px;max-width:100%;}
+  .dot-row{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;margin-top:1px;max-width:100%;}
   .dot-wrap{
     position:relative;display:inline-flex;padding:3px;margin:-3px;
     -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
   }
   .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .dot-emoji{font-size:11px;line-height:1;flex-shrink:0;}
   .dot-wrap:hover::after, .dot-wrap.tapped::after{
     content:attr(data-name);
     position:absolute;
@@ -153,29 +154,106 @@
   .legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}
 
   h2.section{font-family:'Fraunces',serif;font-size:22px;color:var(--char);margin:0 0 14px;}
+  .rank-row{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 14px;border-radius:12px;background:#fbf5e8;margin-bottom:8px;
+    cursor:pointer;transition:.12s;
+  }
+  .rank-row:hover{background:#f5ecd8;}
+  .rank-row.top1{background:linear-gradient(90deg, rgba(240,180,41,0.28), #fbf5e8 70%);border:1px solid var(--cheese);}
+  .rank-badge{font-size:19px;width:26px;text-align:center;flex-shrink:0;font-weight:800;color:var(--sauce-dark);}
+  .rank-info{flex:1;min-width:0;}
+  .rank-date{font-weight:700;font-size:14px;}
+  .rank-sub{font-size:12px;color:#6b5847;margin-top:2px;}
+  .rank-score{font-weight:800;font-size:15px;color:var(--basil);flex-shrink:0;white-space:nowrap;}
   .month-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
   .month-chip{
     padding:6px 14px;border-radius:999px;border:2px solid var(--crust-dark);
     background:transparent;font-family:'Karla',sans-serif;font-weight:600;font-size:13px;
     cursor:pointer;color:var(--ink);transition:.15s;
   }
-  .month-chip.active{background:var(--basil);border-color:var(--basil);color:var(--white);}
-  .summary-row{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:12px 14px;border-radius:12px;background:#fbf5e8;margin-bottom:8px;
+  .month-chip.active{background:var(--char);border-color:var(--char);color:var(--white);}
+  .view-tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .view-tab{
+    padding:9px 18px;border-radius:10px;border:2px solid var(--crust-dark);
+    background:transparent;font-family:'Karla',sans-serif;font-weight:700;font-size:13px;
+    cursor:pointer;color:var(--ink);transition:.15s;
   }
-  .summary-row.best{background:var(--basil);color:var(--white);}
-  .summary-date{font-weight:700;font-size:14px;}
-  .summary-people{font-size:12px;opacity:.85;}
-  .remove-link{color:var(--sauce);font-weight:700;text-decoration:none;margin-left:2px;}
+  .view-tab.active{background:var(--sauce);border-color:var(--sauce);color:var(--white);}
+  .heat-day{
+    position:relative;border-radius:10px;background:#fbf5e8;min-height:60px;padding:5px 4px 6px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    border:2px solid transparent;
+  }
+  .heat-day.empty{background:transparent;}
+  .heat-day.has-data{cursor:pointer;}
+  .heat-day .num{font-weight:700;font-size:13px;}
+  .heat-day.full{border-color:var(--cheese);}
+  .heat-day.selected-detail{border-color:var(--sauce);}
+  .heat-day .date-num{
+    position:absolute;top:4px;left:6px;font-size:9px;font-weight:700;
+    color:rgba(58,42,31,0.5);line-height:1;z-index:2;
+  }
+  .heat-day.full .date-num{color:rgba(58,42,31,0.65);}
+  .heat-shape{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:34px;height:34px;z-index:0;border-radius:50%;
+    background:#7c5aa6;
+  }
+  .heat-shape.top{
+    box-shadow:0 0 0 3px var(--cheese);
+    animation:heatPop 2s ease-in-out infinite;
+  }
+  @keyframes heatPop{
+    0%, 100% { transform: translate(-50%,-50%) scale(1); }
+    50% { transform: translate(-50%,-50%) scale(1.1); }
+  }
+  .heat-spark{
+    position:absolute; width:9px; height:9px; border-radius:50%;
+    background:var(--cheese); top:50%; left:50%; z-index:2; pointer-events:none; opacity:0;
+  }
+  .heat-spark.s1{ animation: heatSpark1 2.2s ease-out infinite; }
+  .heat-spark.s2{ animation: heatSpark2 2.2s ease-out infinite .2s; }
+  .heat-spark.s3{ animation: heatSpark3 2.2s ease-out infinite .4s; }
+  .heat-spark.s4{ animation: heatSpark4 2.2s ease-out infinite .6s; }
+  @keyframes heatSpark1{
+    0%{ transform:translate(-50%,-50%) scale(.4); opacity:0; }
+    15%{ opacity:1; }
+    70%{ transform:translate(-170%,-170%) scale(.2); opacity:0; }
+    100%{ opacity:0; }
+  }
+  @keyframes heatSpark2{
+    0%{ transform:translate(-50%,-50%) scale(.4); opacity:0; }
+    15%{ opacity:1; }
+    70%{ transform:translate(70%,-170%) scale(.2); opacity:0; }
+    100%{ opacity:0; }
+  }
+  @keyframes heatSpark3{
+    0%{ transform:translate(-50%,-50%) scale(.4); opacity:0; }
+    15%{ opacity:1; }
+    70%{ transform:translate(-170%,70%) scale(.2); opacity:0; }
+    100%{ opacity:0; }
+  }
+  @keyframes heatSpark4{
+    0%{ transform:translate(-50%,-50%) scale(.4); opacity:0; }
+    15%{ opacity:1; }
+    70%{ transform:translate(70%,70%) scale(.2); opacity:0; }
+    100%{ opacity:0; }
+  }
+  .heat-count-big{position:relative;z-index:1;font-size:16px;font-weight:800;color:var(--white);line-height:1;}
+  .heat-day.full::after{content:'🎉';position:absolute;top:2px;right:4px;font-size:10px;z-index:2;}
+  .heat-detail-card{
+    background:var(--white);border:1px solid var(--crust-dark);border-radius:12px;
+    padding:14px 16px;margin-top:14px;
+  }
+  .heat-detail-date{font-weight:700;font-size:14px;font-family:'Fraunces',serif;margin-bottom:8px;}
+  .heat-person{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px;gap:10px;}
+  .remove-link{color:var(--sauce);font-weight:700;text-decoration:none;margin-left:2px;font-size:12px;}
   .remove-link:hover{text-decoration:underline;}
-  .summary-row.best .remove-link{color:var(--white);}
-  .summary-tally{display:flex;gap:6px;font-size:11px;font-weight:700;}
-  .tag{padding:3px 8px;border-radius:999px;background:var(--cheese);color:var(--char);}
+  .tag{padding:3px 8px;border-radius:999px;background:var(--cheese);color:var(--char);font-size:11px;font-weight:700;flex-shrink:0;}
   .tag.diy{background:var(--diy-color);color:var(--white);}
   .tag.resto{background:var(--resto-color);color:var(--white);}
   .tag.either{background:var(--either-color);color:var(--white);}
-  .summary-row.best .tag{background:rgba(255,255,255,0.25);color:var(--white);}
 
   .setup-banner{
     background:#fff3e0;border:2px dashed var(--sauce);border-radius:14px;
@@ -191,6 +269,7 @@
     .day{min-height:52px;padding:4px 2px;gap:2px;}
     .pref{font-size:8px;padding:1px 4px;}
     .dot{width:6px;height:6px;}
+    .dot-emoji{font-size:9px;}
     .dot-row{gap:1px;}
     .dot-more{font-size:7px;}
     .legend{gap:10px;font-size:11px;}
@@ -252,8 +331,22 @@
 
   <div class="card">
     <h2 class="section">Availability</h2>
-    <div class="month-tabs" id="monthTabs"></div>
-    <div id="summary"></div>
+    <div class="view-tabs">
+      <button class="view-tab active" id="viewTabRanking" data-view="ranking">🏆 Ranking</button>
+      <button class="view-tab" id="viewTabCalendar" data-view="calendar">📅 Heatmap</button>
+    </div>
+
+    <div id="rankingView">
+      <p class="sub" style="margin:0 0 14px;max-width:none;">Top Dates so far</p>
+      <div id="bestDates"></div>
+    </div>
+
+    <div id="calendarView" style="display:none;">
+      <p class="sub" style="margin:0 0 14px;max-width:none;">Heatmap of availbities</p>
+      <div class="month-tabs" id="monthTabs"></div>
+      <div class="grid" id="heatGrid"></div>
+      <div id="heatDetail"></div>
+    </div>
   </div>
 
   <footer> data is shared live with anyone who opens this page.</footer>
@@ -283,7 +376,7 @@ let loadedName = null; // whose saved answers are currently loaded into the cale
 let current = new Date();
 current.setDate(1);
 let mySelections = {}; // "YYYY-MM-DD" -> "diy"|"resto"
-let summaryMonthFilter = 'all'; // 'all' or 'YYYY-MM'
+let heatmapMonth = null; // 'YYYY-MM' — which month the Availability calendar is showing
 
 const nameInput = document.getElementById('nameInput');
 nameInput.value = localStorage.getItem('pizzaName') || '';
@@ -309,7 +402,8 @@ if (isConfigured) {
       loadedName = currentName;
     }
     renderCalendar();
-    renderSummary();
+    renderBestDates();
+    renderHeatmap();
   });
 } else {
   document.getElementById('setupBanner').style.display = 'block';
@@ -326,6 +420,13 @@ document.getElementById('nextMonth').addEventListener('click', () => {
 
 function fmtDate(y, m, d) {
   return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function getActivePeople() {
+  // only people who've actually picked at least one date — not everyone with a Firestore doc
+  return Object.entries(responses)
+    .filter(([n, dates]) => dates && Object.keys(dates).length > 0)
+    .map(([n]) => n);
 }
 
 function colorForPref(pref) {
@@ -458,59 +559,111 @@ document.getElementById('clearBtn').addEventListener('click', async () => {
   }
 });
 
-function isNextDay(d1, d2) {
-  const a = new Date(d1 + 'T00:00:00');
-  const b = new Date(d2 + 'T00:00:00');
-  return (b - a) === 86400000;
-}
+const BEST_DATE_THRESHOLD = 0.75; // dates need at least this fraction of people-who've-answered available to be ranked
 
-function compositionKey(entries) {
-  return entries.map(e => `${e.name}:${e.pref}`).sort().join('|');
-}
+function computeBestDates() {
+  const totalPeopleList = getActivePeople();
+  const totalPeople = totalPeopleList.length;
+  if (totalPeople === 0) return [];
 
-function renderSummary() {
-  const el = document.getElementById('summary');
-  const tabsEl = document.getElementById('monthTabs');
-
-  // date -> [{name, pref}]
-  const dateInfo = {};
+  const dateMap = {}; // date -> Set of names available that day
   Object.entries(responses).forEach(([name, dates]) => {
-    Object.entries(dates || {}).forEach(([date, pref]) => {
-      if (!dateInfo[date]) dateInfo[date] = [];
-      dateInfo[date].push({ name, pref });
+    Object.keys(dates || {}).forEach(date => {
+      if (!dateMap[date]) dateMap[date] = new Set();
+      dateMap[date].add(name);
     });
   });
 
-  const totalPeople = Object.keys(responses).length;
-  const sortedDates = Object.keys(dateInfo).sort();
-  const myName = nameInput.value.trim();
+  const minAvail = Math.ceil(totalPeople * BEST_DATE_THRESHOLD);
+  const rows = Object.entries(dateMap)
+    .map(([date, availSet]) => ({
+      date,
+      available: availSet.size,
+      missing: totalPeopleList.filter(n => !availSet.has(n)),
+      score: availSet.size / totalPeople
+    }))
+    .filter(r => r.available >= minAvail);
 
-  if (sortedDates.length === 0) {
-    tabsEl.innerHTML = '';
-    el.innerHTML = '<p class="status">No one has submitted availability yet.</p>';
+  rows.sort((a, b) => b.score - a.score || b.available - a.available || a.date.localeCompare(b.date));
+  return rows.slice(0, 10);
+}
+
+function renderBestDates() {
+  const el = document.getElementById('bestDates');
+  const rows = computeBestDates();
+  const totalPeople = getActivePeople().length;
+
+  if (rows.length === 0) {
+    const minAvail = Math.ceil(totalPeople * BEST_DATE_THRESHOLD);
+    el.innerHTML = totalPeople > 0
+      ? `<p class="status">Not enough overlap yet — need at least ${minAvail} of the ${totalPeople} people who've answered so far free on the same date (${Math.round(BEST_DATE_THRESHOLD * 100)}%).</p>`
+      : '<p class="status">No one has submitted availability yet.</p>';
     return;
   }
 
-  // collapse consecutive days that have the exact same people + preferences into one range
-  const groups = [];
-  let i = 0;
-  while (i < sortedDates.length) {
-    const key = compositionKey(dateInfo[sortedDates[i]]);
-    let j = i;
-    while (
-      j + 1 < sortedDates.length &&
-      isNextDay(sortedDates[j], sortedDates[j + 1]) &&
-      compositionKey(dateInfo[sortedDates[j + 1]]) === key
-    ) {
-      j++;
-    }
-    groups.push({ startDate: sortedDates[i], endDate: sortedDates[j], entries: dateInfo[sortedDates[i]] });
-    i = j + 1;
+  const medals = ['🥇', '🥈', '🥉'];
+  el.innerHTML = '';
+  rows.forEach((r, i) => {
+    const d = new Date(r.date + 'T00:00:00');
+    const label = d.toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric' });
+    let notes = '';
+    if (r.missing.length === 0) notes = 'Everyone available';
+    else if (r.missing.length <= 2) notes = `${r.missing.join(', ')} unavailable`;
+
+    const row = document.createElement('div');
+    row.className = 'rank-row' + (i === 0 ? ' top1' : '');
+    row.innerHTML = `
+      <div class="rank-badge">${medals[i] || (i + 1)}</div>
+      <div class="rank-info">
+        <div class="rank-date">${label}</div>
+        <div class="rank-sub">${r.available}/${totalPeople} available${notes ? ' · ' + notes : ''}</div>
+      </div>
+      <div class="rank-score">${Math.round(r.score * 100)}%</div>`;
+    row.addEventListener('click', () => {
+      heatmapMonth = r.date.slice(0, 7);
+      setAvailabilityView('calendar');
+      renderHeatmap();
+      showHeatDetail(r.date);
+      document.getElementById('calendarView')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    el.appendChild(row);
+  });
+}
+
+function setAvailabilityView(view) {
+  document.getElementById('viewTabRanking').classList.toggle('active', view === 'ranking');
+  document.getElementById('viewTabCalendar').classList.toggle('active', view === 'calendar');
+  document.getElementById('rankingView').style.display = view === 'ranking' ? '' : 'none';
+  document.getElementById('calendarView').style.display = view === 'calendar' ? '' : 'none';
+}
+
+document.getElementById('viewTabRanking').addEventListener('click', () => setAvailabilityView('ranking'));
+document.getElementById('viewTabCalendar').addEventListener('click', () => setAvailabilityView('calendar'));
+
+function renderHeatmap() {
+  const tabsEl = document.getElementById('monthTabs');
+  const grid = document.getElementById('heatGrid');
+  const detailEl = document.getElementById('heatDetail');
+
+  // find every month that actually has at least one submitted date
+  const monthsSet = new Set();
+  Object.values(responses).forEach(dates => {
+    Object.keys(dates || {}).forEach(dateKey => monthsSet.add(dateKey.slice(0, 7)));
+  });
+  const monthsPresent = [...monthsSet].sort();
+
+  if (monthsPresent.length === 0) {
+    tabsEl.innerHTML = '';
+    grid.innerHTML = '<p class="status" style="grid-column:1 / -1;">No one has submitted availability yet.</p>';
+    detailEl.innerHTML = '';
+    return;
   }
 
-  // build month tabs from whichever months actually have entries
-  const monthsPresent = [...new Set(groups.map(g => g.startDate.slice(0, 7)))].sort();
-  if (!monthsPresent.includes(summaryMonthFilter)) summaryMonthFilter = 'all';
+  if (!heatmapMonth || !monthsPresent.includes(heatmapMonth)) {
+    // default to the month matching what's currently shown up top, else the earliest month with data
+    const currentYm = fmtDate(current.getFullYear(), current.getMonth(), 1).slice(0, 7);
+    heatmapMonth = monthsPresent.includes(currentYm) ? currentYm : monthsPresent[0];
+  }
 
   const monthLabel = (ym) => {
     const [yy, mm] = ym.split('-').map(Number);
@@ -518,93 +671,137 @@ function renderSummary() {
   };
 
   tabsEl.innerHTML = '';
-  const allChip = document.createElement('button');
-  allChip.className = 'month-chip' + (summaryMonthFilter === 'all' ? ' active' : '');
-  allChip.textContent = 'All';
-  allChip.addEventListener('click', () => { summaryMonthFilter = 'all'; renderSummary(); });
-  tabsEl.appendChild(allChip);
   monthsPresent.forEach(ym => {
     const chip = document.createElement('button');
-    chip.className = 'month-chip' + (summaryMonthFilter === ym ? ' active' : '');
+    chip.className = 'month-chip' + (heatmapMonth === ym ? ' active' : '');
     chip.textContent = monthLabel(ym);
-    chip.addEventListener('click', () => { summaryMonthFilter = ym; renderSummary(); });
+    chip.addEventListener('click', () => {
+      heatmapMonth = ym;
+      renderHeatmap();
+    });
     tabsEl.appendChild(chip);
   });
 
-  const visibleGroups = summaryMonthFilter === 'all'
-    ? groups
-    : groups.filter(g => g.startDate.slice(0, 7) === summaryMonthFilter);
+  const [y, mIdx] = heatmapMonth.split('-').map(Number);
+  const m = mIdx - 1;
 
-  visibleGroups.sort((a, b) => b.entries.length - a.entries.length || a.startDate.localeCompare(b.startDate));
-
-  el.innerHTML = '';
-  if (visibleGroups.length === 0) {
-    el.innerHTML = '<p class="status">No availability in this month.</p>';
-  }
-  visibleGroups.forEach(group => {
-    const { startDate, endDate, entries } = group;
-    const diy = entries.filter(e => e.pref === 'diy').length;
-    const resto = entries.filter(e => e.pref === 'resto').length;
-    const either = entries.filter(e => e.pref === 'both').length;
-    const isBest = totalPeople > 0 && entries.length === totalPeople;
-
-    const row = document.createElement('div');
-    row.className = 'summary-row' + (isBest ? ' best' : '');
-
-    const fmt = (ds) => {
-      const d = new Date(ds + 'T00:00:00');
-      return d.toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric' });
-    };
-    const label = startDate === endDate ? fmt(startDate) : `${fmt(startDate)} – ${fmt(endDate)}`;
-
-    const peopleHtml = entries.map(e => {
-      if (e.name === myName && myName) {
-        return `<span>${e.name} <a href="#" class="remove-link" data-start="${startDate}" data-end="${endDate}" data-name="${e.name}">(remove)</a></span>`;
-      }
-      return `<span>${e.name}</span>`;
-    }).join(', ');
-
-    row.innerHTML = `
-      <div>
-        <div class="summary-date">${label}${isBest ? ' 🎉 everyone!' : ''}</div>
-        <div class="summary-people">${peopleHtml}</div>
-      </div>
-      <div class="summary-tally">
-        ${diy ? `<span class="tag diy">DIY</span>` : ''}
-        ${resto ? `<span class="tag resto">Restaurant</span>` : ''}
-        ${either ? `<span class="tag either">Either</span>` : ''}
-      </div>`;
-    el.appendChild(row);
+  grid.innerHTML = '';
+  ['S','M','T','W','T','F','S'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'dow'; el.textContent = d;
+    grid.appendChild(el);
   });
+
+  const firstDow = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const totalPeople = getActivePeople().length;
+
+  for (let i = 0; i < firstDow; i++) {
+    const el = document.createElement('div');
+    el.className = 'heat-day empty';
+    grid.appendChild(el);
+  }
+
+  // gather each day's data first so we know the month's max before drawing any cell
+  const dayData = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = fmtDate(y, m, d);
+    const entries = Object.entries(responses)
+      .filter(([n, dates]) => dates && dates[key])
+      .map(([n, dates]) => ({ name: n, pref: dates[key] }));
+    dayData.push({ d, key, entries, count: entries.length });
+  }
+  const maxCount = Math.max(0, ...dayData.map(x => x.count));
+
+  dayData.forEach(({ d, key, entries, count }) => {
+    const cell = document.createElement('div');
+    cell.className = 'heat-day';
+    cell.dataset.date = key;
+
+    if (count > 0) {
+      cell.classList.add('has-data');
+      if (totalPeople > 0 && count === totalPeople) cell.classList.add('full');
+      const isMax = maxCount >= 2 && count === maxCount;
+      const intensity = totalPeople > 0 ? Math.min(1, count / totalPeople) : 0.5;
+      const shapeOpacity = isMax ? 1 : (0.2 + intensity * 0.7);
+
+      cell.innerHTML = `
+        <span class="date-num">${d}</span>
+        <span class="heat-shape${isMax ? ' top' : ''}" style="opacity:${shapeOpacity};"></span>
+        ${isMax ? '<span class="heat-spark s1"></span><span class="heat-spark s2"></span><span class="heat-spark s3"></span><span class="heat-spark s4"></span>' : ''}
+        <span class="heat-count-big">${count}</span>`;
+
+      const maxDots = window.innerWidth < 420 ? 3 : 4;
+      const shownEntries = entries.slice(0, maxDots);
+      const dotRow = document.createElement('div');
+      dotRow.className = 'dot-row';
+      shownEntries.forEach((e) => {
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.style.background = colorForPref(e.pref);
+        dotRow.appendChild(dot);
+      });
+      if (entries.length > shownEntries.length) {
+        const more = document.createElement('span');
+        more.className = 'dot-more';
+        more.textContent = `+${entries.length - shownEntries.length}`;
+        dotRow.appendChild(more);
+      }
+      cell.appendChild(dotRow);
+
+      cell.addEventListener('click', () => showHeatDetail(key));
+    } else {
+      cell.innerHTML = `<span class="num">${d}</span>`;
+    }
+
+    grid.appendChild(cell);
+  });
+}
+
+function showHeatDetail(dateKey) {
+  document.querySelectorAll('.heat-day.selected-detail').forEach(c => c.classList.remove('selected-detail'));
+  const cell = document.querySelector(`.heat-day[data-date="${dateKey}"]`);
+  if (cell) cell.classList.add('selected-detail');
+
+  const entries = Object.entries(responses)
+    .filter(([n, dates]) => dates && dates[dateKey])
+    .map(([n, dates]) => ({ name: n, pref: dates[dateKey] }));
+
+  const el = document.getElementById('heatDetail');
+  if (entries.length === 0) { el.innerHTML = ''; return; }
+
+  const myName = nameInput.value.trim();
+  const d = new Date(dateKey + 'T00:00:00');
+  const label = d.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const rows = entries.map(e => {
+    const prefLabel = e.pref === 'both' ? 'Either' : (e.pref === 'diy' ? 'DIY' : 'Restaurant');
+    const tagClass = e.pref === 'both' ? 'either' : e.pref;
+    const removeHtml = (e.name === myName && myName)
+      ? ` <a href="#" class="remove-link" data-date="${dateKey}" data-name="${e.name}">(remove)</a>`
+      : '';
+    return `<div class="heat-person"><span>${e.name}${removeHtml}</span><span class="tag ${tagClass}">${prefLabel}</span></div>`;
+  }).join('');
+
+  el.innerHTML = `<div class="heat-detail-card"><div class="heat-detail-date">${label}</div>${rows}</div>`;
 
   el.querySelectorAll('.remove-link').forEach(link => {
     link.addEventListener('click', async (e) => {
       e.preventDefault();
-      await removeDateRange(link.dataset.name, link.dataset.start, link.dataset.end);
+      await removeSingleDate(link.dataset.name, link.dataset.date);
     });
   });
 }
 
-async function removeDateRange(name, startDate, endDate) {
+async function removeSingleDate(name, date) {
   if (!isConfigured || !db) return;
-  const statusEl = document.getElementById('statusMsg');
   const updated = { ...(responses[name] || {}) };
-  let d = new Date(startDate + 'T00:00:00');
-  const end = new Date(endDate + 'T00:00:00');
-  while (d <= end) {
-    const key = fmtDate(d.getFullYear(), d.getMonth(), d.getDate());
-    delete updated[key];
-    if (loadedName === name) delete mySelections[key];
-    d.setDate(d.getDate() + 1);
-  }
+  delete updated[date];
   try {
     await setDoc(doc(db, "pizza-availability", name), { dates: updated, updatedAt: Date.now() });
-    if (loadedName === name) renderCalendar();
-    statusEl.textContent = startDate === endDate
-      ? `Removed ${startDate} for ${name}.`
-      : `Removed ${startDate} – ${endDate} for ${name}.`;
+    if (loadedName === name) { delete mySelections[date]; renderCalendar(); }
+    showHeatDetail(date);
   } catch (e) {
-    statusEl.textContent = 'Could not remove — check your Firebase setup.';
     console.error(e);
   }
 }
@@ -622,7 +819,8 @@ window.addEventListener('resize', () => {
 });
 
 renderCalendar();
-renderSummary();
+renderBestDates();
+renderHeatmap();
 </script>
 </body>
 </html>
