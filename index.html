@@ -316,7 +316,6 @@
     </div>
     <div class="grid" id="calGrid"></div>
     <div class="toggle-hint">Click once for DIY, again for Restaurant, again for Either, and once more to clear.</div>
-    <div class="toggle-hint">Dots show who it is. Hover or click on the dot to see who made the choice.</div>
     <div class="legend">
       <span><span class="legend-dot" style="background:var(--diy-color);"></span>DIY</span>
       <span><span class="legend-dot" style="background:var(--resto-color);"></span>Restaurant</span>
@@ -450,7 +449,6 @@ function renderCalendar() {
 
   const firstDow = new Date(y, m, 1).getDay();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const myName = nameInput.value.trim();
 
   for (let i = 0; i < firstDow; i++) {
     const el = document.createElement('div');
@@ -477,41 +475,6 @@ function renderCalendar() {
         tag.className = 'pref ' + (pref === 'diy' ? 'diy' : 'resto');
         tag.textContent = pref === 'diy' ? 'DIY' : 'Restaurant';
       }
-    }
-
-    // tiny dots for everyone else who's marked this date — colored by their preference
-    const others = Object.entries(responses)
-      .filter(([n, dates]) => n !== myName && dates && dates[key])
-      .map(([n, dates]) => ({ name: n, pref: dates[key] }));
-    if (others.length > 0) {
-      const dotRow = document.createElement('div');
-      dotRow.className = 'dot-row';
-      const maxDots = window.innerWidth < 420 ? 3 : 5;
-      const shown = others.slice(0, maxDots);
-      shown.forEach(({ name: n, pref: p }) => {
-        const wrap = document.createElement('span');
-        wrap.className = 'dot-wrap';
-        wrap.dataset.name = p === 'both' ? `${n} (Either)` : `${n} (${p === 'diy' ? 'DIY' : 'Restaurant'})`;
-        wrap.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const wasTapped = wrap.classList.contains('tapped');
-          document.querySelectorAll('.dot-wrap.tapped').forEach(w => w.classList.remove('tapped'));
-          if (!wasTapped) wrap.classList.add('tapped');
-        });
-        const dot = document.createElement('span');
-        dot.className = 'dot';
-        dot.style.background = colorForPref(p);
-        wrap.appendChild(dot);
-        dotRow.appendChild(wrap);
-      });
-      if (others.length > shown.length) {
-        const more = document.createElement('span');
-        more.className = 'dot-more';
-        more.textContent = `+${others.length - shown.length}`;
-        dotRow.appendChild(more);
-      }
-      cell.appendChild(dotRow);
     }
 
     if (tag) cell.appendChild(tag);
