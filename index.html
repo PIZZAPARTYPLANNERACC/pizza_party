@@ -90,6 +90,8 @@
     transition:.12s;
   }
   .day.empty{background:transparent;cursor:default;}
+  .day.past{opacity:.4;cursor:default;}
+  .day.past:hover{border-color:transparent;}
   .day .num{font-weight:700;font-size:13px;}
   .day:hover:not(.empty){border-color:var(--basil-light);}
   .day.selected{background:var(--basil);border-color:var(--basil);}
@@ -421,6 +423,15 @@ function fmtDate(y, m, d) {
   return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
 
+function todayKey() {
+  const t = new Date();
+  return fmtDate(t.getFullYear(), t.getMonth(), t.getDate());
+}
+
+function isPastDate(dateKey) {
+  return dateKey < todayKey();
+}
+
 function getActivePeople() {
   // only people who've actually picked at least one date — not everyone with a Firestore doc
   return Object.entries(responses)
@@ -458,9 +469,10 @@ function renderCalendar() {
 
   for (let d = 1; d <= daysInMonth; d++) {
     const key = fmtDate(y, m, d);
+    const past = isPastDate(key);
 
     const cell = document.createElement('div');
-    cell.className = 'day';
+    cell.className = 'day' + (past ? ' past' : '');
     cell.innerHTML = `<span class="num">${d}</span>`;
 
     const pref = mySelections[key];
@@ -479,13 +491,15 @@ function renderCalendar() {
 
     if (tag) cell.appendChild(tag);
 
-    cell.addEventListener('click', () => {
-      if (!mySelections[key]) mySelections[key] = 'diy';
-      else if (mySelections[key] === 'diy') mySelections[key] = 'resto';
-      else if (mySelections[key] === 'resto') mySelections[key] = 'both';
-      else delete mySelections[key];
-      renderCalendar();
-    });
+    if (!past) {
+      cell.addEventListener('click', () => {
+        if (!mySelections[key]) mySelections[key] = 'diy';
+        else if (mySelections[key] === 'diy') mySelections[key] = 'resto';
+        else if (mySelections[key] === 'resto') mySelections[key] = 'both';
+        else delete mySelections[key];
+        renderCalendar();
+      });
+    }
     grid.appendChild(cell);
   }
 }
@@ -530,6 +544,7 @@ function computeBestDates() {
   const dateMap = {}; // date -> Set of names available that day
   Object.entries(responses).forEach(([name, dates]) => {
     Object.keys(dates || {}).forEach(date => {
+      if (isPastDate(date)) return; // skip dates that have already passed
       if (!dateMap[date]) dateMap[date] = new Set();
       dateMap[date].add(name);
     });
@@ -600,16 +615,18 @@ function renderHeatmap() {
   const grid = document.getElementById('heatGrid');
   const detailEl = document.getElementById('heatDetail');
 
-  // find every month that actually has at least one submitted date
+  // find every month that actually has at least one submitted date (excluding past dates)
   const monthsSet = new Set();
   Object.values(responses).forEach(dates => {
-    Object.keys(dates || {}).forEach(dateKey => monthsSet.add(dateKey.slice(0, 7)));
+    Object.keys(dates || {}).forEach(dateKey => {
+      if (!isPastDate(dateKey)) monthsSet.add(dateKey.slice(0, 7));
+    });
   });
   const monthsPresent = [...monthsSet].sort();
 
   if (monthsPresent.length === 0) {
     tabsEl.innerHTML = '';
-    grid.innerHTML = '<p class="status" style="grid-column:1 / -1;">No one has submitted availability yet.</p>';
+    grid.innerHTML = '<p class="status" style="grid-column:1 / -1;">No upcoming availability submitted yet.</p>';
     detailEl.innerHTML = '';
     return;
   }
@@ -661,7 +678,7 @@ function renderHeatmap() {
   const dayData = [];
   for (let d = 1; d <= daysInMonth; d++) {
     const key = fmtDate(y, m, d);
-    const entries = Object.entries(responses)
+    const entries = isPastDate(key) ? [] : Object.entries(responses)
       .filter(([n, dates]) => dates && dates[key])
       .map(([n, dates]) => ({ name: n, pref: dates[key] }));
     dayData.push({ d, key, entries, count: entries.length });
